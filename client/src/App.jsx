@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useEffectEvent } from 'react'
 import './App.css'
 import { MILESTONES } from './config'
 
@@ -7,16 +7,21 @@ function App() {
   const [count, setCount] = useState(0)
   const [milestones, setMilestones] = useState([])
 
-  useEffect(() => {
+  const handleStartRecording = useEffectEvent((isRecording, count) => {
     if (isRecording) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         setCount(count + 1)
         if (MILESTONES[count]) {
           setMilestones([...milestones, MILESTONES[count]])
         }
       }, 1000)
+      return () => clearTimeout(timeout)
     }
-  }, [isRecording, count, milestones])
+  })
+
+  useEffect(() => {
+    handleStartRecording(isRecording, count)
+  }, [isRecording, count])
 
   return (
     <>
