@@ -18,6 +18,10 @@ function App() {
       }, 1000);
       return () => clearTimeout(timeout);
     }
+    else {
+      setCount(() => 0);
+      setMilestones(() => []);
+    }
   });
 
   useEffect(() => {
@@ -31,7 +35,7 @@ function App() {
         <button
           onClick={() => {
             setIsRecording((isRecording) => !isRecording);
-            fetch("http://localhost:3000/client-side-record/123");
+            // !isRecording && fetch("http://localhost:3000/client-side-record/123");
           }}
         >
           {isRecording

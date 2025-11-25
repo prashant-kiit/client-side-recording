@@ -1,10 +1,10 @@
 import puppeteer from "puppeteer";
 import { spawn } from "child_process";
 
-async function startMeetingRecording(meetingUrl, duration = 60000) {
+async function startMeetingRecording(meetingUrl, duration = 6) {
   // Launch browser
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: "new",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -15,12 +15,18 @@ async function startMeetingRecording(meetingUrl, duration = 60000) {
   const page = await browser.newPage();
   await page.goto(meetingUrl, { waitUntil: "networkidle2" });
 
+  // button click to track recording
+  await page.waitForSelector("button");
+  await page.click("button");
+
   // Prepare MP4 output
   const outputFile = "./recordings/meeting.mp4";
 
   // Start FFmpeg process to create the MP4
   const ffmpeg = spawn("ffmpeg", [
     "-y", // overwrite existing file
+    "-framerate",
+    "2",
     "-f",
     "mjpeg", // input format from Puppeteer
     "-i",
@@ -36,7 +42,7 @@ async function startMeetingRecording(meetingUrl, duration = 60000) {
 
   ffmpeg.stderr.on("data", (data) => {
     // Uncomment this for debugging:
-    // console.log(data.toString());
+    console.log(data.toString());
   });
 
   ffmpeg.on("close", () => {
@@ -54,8 +60,8 @@ async function startMeetingRecording(meetingUrl, duration = 60000) {
 
   // Write each frame to FFmpeg stdin
   client.on("Page.screencastFrame", async (frame) => {
-    const buffer = Buffer.from(frame.data, "base64");
-    ffmpeg.stdin.write(buffer);
+    console.log("frame:", frame);
+    ffmpeg.stdin.write(Buffer.from(frame.data, "base64"));
 
     await client.send("Page.screencastFrameAck", {
       sessionId: frame.sessionId,
